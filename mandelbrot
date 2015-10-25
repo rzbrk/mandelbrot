@@ -1,0 +1,76 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use GD::Simple;
+use Time::HiRes qw(usleep);
+
+# define parameters
+my $rl = -2;
+my $il = -1;
+my $ru = +1;
+my $iu = +1;
+my $pixelsize = 0.01;
+
+# calculate parameters
+my $ncols = int(( $ru - $rl ) / $pixelsize);
+my $nrows = int(( $iu - $il ) / $pixelsize);
+
+#print "$ncols, $nrows\n";
+
+# create a new image
+my $img = GD::Simple->new($ncols,$nrows);
+$img->penSize(1,1);
+
+for (my $col = 0; $col <= $ncols; $col++)
+{
+    # Real part of complex number c
+    my $cr = $rl + $col * $pixelsize;
+
+    for (my $row = 0; $row <= $nrows; $row++)
+    {
+        # Imaginary part of complex number c
+        my $ci = $il + $row * $pixelsize;
+
+        # Calculate mandelbrot iterations
+        my $iter = mb_sequence($cr, $ci);
+        my $rgb = color($iter);
+
+        # Draw point
+        $img->moveTo($col,$row);
+        $img->fgcolor(@{$rgb});
+        $img->line(1);
+    }
+}
+
+# convert into png data
+print $img->png;
+
+sub mb_sequence
+{
+    my $cr = shift;
+    my $ci = shift;
+
+    my $zr = 0;
+    my $zi = 0;
+    my $za = 0;
+    my $n = 0;
+
+    while( $za <= 2 && $n <= 240 )
+    {
+        $zr = $zr**2 - $zi**2 + $cr;
+        $zi = 2 * $zr * $zi + $ci;
+        $za = sqrt($zr**2 + $zi**2);
+        $n++;
+    }
+
+    return $n;
+}
+
+sub color
+{
+    my $n = shift;
+    my @rgb = GD::Simple->HSVtoRGB($n,255,255);
+    return \@rgb;
+}
