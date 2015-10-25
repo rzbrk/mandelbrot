@@ -7,10 +7,10 @@ use GD::Simple;
 use Time::HiRes qw(usleep);
 
 # define parameters
-my $rl = -2;
-my $il = -1;
-my $ru = +1;
-my $iu = +1;
+my $rl = -2;        # lower bound real
+my $il = -1;        # lower bound imag
+my $ru = +1;        # upper bound real
+my $iu = +1;        # upper bound imag
 my $pixelsize = 0.01;
 
 # calculate parameters
@@ -23,17 +23,18 @@ my $nrows = int(( $iu - $il ) / $pixelsize);
 my $img = GD::Simple->new($ncols,$nrows);
 $img->penSize(1,1);
 
+# interation over all cols and rows of image
 for (my $col = 0; $col <= $ncols; $col++)
 {
-    # Real part of complex number c
+    # calculate real part of complex number c
     my $cr = $rl + $col * $pixelsize;
 
     for (my $row = 0; $row <= $nrows; $row++)
     {
-        # Imaginary part of complex number c
+        # calculate imaginary part of complex number c
         my $ci = $il + $row * $pixelsize;
 
-        # Calculate mandelbrot iterations
+        # calculate mandelbrot iterations
         my $iter = mb_sequence($cr, $ci);
         my $rgb = color($iter);
 
@@ -44,30 +45,35 @@ for (my $col = 0; $col <= $ncols; $col++)
     }
 }
 
-# convert into png data
+# output to png data (STDOUT)
 print $img->png;
 
+# calculate the mandelbot series
 sub mb_sequence
 {
+    # get the complex number the iteration has to be
+    # calculated for
     my $cr = shift;
     my $ci = shift;
 
-    my $zr = 0;
-    my $zi = 0;
-    my $za = 0;
-    my $n = 0;
+    # initialize some values
+    my $zr = 0;     # real part of series
+    my $zi = 0;     # imag part of series
+    my $za2 = 0;    # square of abs value
+    my $n = 0;      # iteration
 
-    while( $za <= 2 && $n <= 240 )
+    while( $za2 <= 4 && $n <= 240 )
     {
         $zr = $zr**2 - $zi**2 + $cr;
         $zi = 2 * $zr * $zi + $ci;
-        $za = sqrt($zr**2 + $zi**2);
+        $za2 = $zr**2 + $zi**2;
         $n++;
     }
 
     return $n;
 }
 
+# return rgb color values as a function of the iterations
 sub color
 {
     my $n = shift;
