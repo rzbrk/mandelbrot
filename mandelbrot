@@ -5,15 +5,16 @@ use warnings;
 
 use GD::Simple;
 use Time::HiRes qw( usleep sleep );
+use Math::Complex;
 
 # define parameters
 my $rl = -2;            # lower bound real
 my $il = -2;            # lower bound imag
 my $ru = +2;            # upper bound real
 my $iu = +2;            # upper bound imag
-my $pixelsize = 0.01;   # pixel size
-my $maxiter = 255;      # maximum iterations
-my $threshold = 100;    # threshold for belonging to mandelbrot set
+my $pixelsize = 0.004;  # pixel size
+my $maxiter = 25;      # maximum iterations
+my $threshold = 20;    # threshold for belonging to mandelbrot set
 my $file = "mandel.png";
 
 # calculate parameters
@@ -45,7 +46,7 @@ for (my $col = 0; $col < $ncols; $col++)
         $ci = $il + (0.5 + $row) * $pixelsize;
 
         # calculate mandelbrot sequence
-        $iter = mb_sequence($cr, $ci);
+        $iter = mb_sequence($cr, $ci, $maxiter);
         $rgb = color($iter, $threshold);
 
         # draw point
@@ -76,18 +77,16 @@ sub mb_sequence
     # calculated for
     my $cr = shift;
     my $ci = shift;
+    my $maxiter = shift;
 
     # initialize some values
-    my $zr = 0;     # real part of series
-    my $zi = 0;     # imag part of series
-    my $za2 = 0;    # square of abs value
-    my $iter = 0;   # iteration
+    my $c = cplx($cr, $ci);
+    my $z = cplx(0, 0);
+    my $iter = 0;
 
-    while( $za2 <= 4 && $iter < $maxiter )
+    while (abs($z) <= 2 && $iter < $maxiter)
     {
-        $zr = $zr**2 - $zi**2 + $cr;
-        $zi = 2 * $zr * $zi + $ci;
-        $za2 = $zr**2 + $zi**2;
+        $z = $z * $z + $c;
         $iter++;
     }
 
