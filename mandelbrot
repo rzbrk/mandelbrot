@@ -4,51 +4,72 @@ use strict;
 use warnings;
 
 use GD::Simple;
-use Time::HiRes qw(usleep);
+use Time::HiRes qw( usleep sleep );
 
 # define parameters
-my $rl = -2;        # lower bound real
-my $il = -1;        # lower bound imag
-my $ru = +1;        # upper bound real
-my $iu = +1;        # upper bound imag
-my $pixelsize = 0.01;
+my $rl = -2;            # lower bound real
+my $il = -2;            # lower bound imag
+my $ru = +2;            # upper bound real
+my $iu = +2;            # upper bound imag
+my $pixelsize = 0.01;   # pixel size
+my $maxiter = 255;      # maximum iterations
+my $threshold = 100;    # threshold for belonging to mandelbrot set
+my $file = "mandel.png";
 
 # calculate parameters
 my $ncols = int(( $ru - $rl ) / $pixelsize);
 my $nrows = int(( $iu - $il ) / $pixelsize);
 
-#print "$ncols, $nrows\n";
+print "# Cols: $ncols\n# Rows: $nrows\n\n";
 
 # create a new image
 my $img = GD::Simple->new($ncols,$nrows);
 $img->penSize(1,1);
 
+# initialize some values
+my $pixelcnt = 0;       # pixel counter
+my $cr = 0;             # real part
+my $ci = 0;             # imaginary part
+my $iter = 0;           # iterations
+my $rgb;                # color (arrayref)
+
 # interation over all cols and rows of image
-for (my $col = 0; $col <= $ncols; $col++)
+for (my $col = 0; $col < $ncols; $col++)
 {
     # calculate real part of complex number c
-    my $cr = $rl + $col * $pixelsize;
+    $cr = $rl + (0.5 + $col) * $pixelsize;
 
-    for (my $row = 0; $row <= $nrows; $row++)
+    for (my $row = 0; $row < $nrows; $row++)
     {
         # calculate imaginary part of complex number c
-        my $ci = $il + $row * $pixelsize;
+        $ci = $il + (0.5 + $row) * $pixelsize;
 
-        # calculate mandelbrot iterations
-        my $iter = mb_sequence($cr, $ci);
-        my $rgb = color($iter);
+        # calculate mandelbrot sequence
+        $iter = mb_sequence($cr, $ci);
+        $rgb = color($iter, $threshold);
 
-        # Draw point
+        # draw point
         $img->moveTo($col,$row);
         $img->fgcolor(@{$rgb});
         $img->line(1);
+
+        $pixelcnt++;
+
+        # progress info
+        printf "[%3s%%] Re = %+7.3f, Im = %+7.3f, Iter = %4s \r",
+            int(100*$pixelcnt/($ncols*$nrows)), $cr, $ci, $iter;
+        #usleep(5000);
     }
 }
 
-# output to png data (STDOUT)
-print $img->png;
+print "\n";
 
-# calculate the mandelbot series
+# output data to png file
+open PNG, ">$file";
+print PNG $img->png;
+close PNG;
+
+# calculate the mandelbot sequence
 sub mb_sequence
 {
     # get the complex number the iteration has to be
@@ -60,23 +81,27 @@ sub mb_sequence
     my $zr = 0;     # real part of series
     my $zi = 0;     # imag part of series
     my $za2 = 0;    # square of abs value
-    my $n = 0;      # iteration
+    my $iter = 0;   # iteration
 
-    while( $za2 <= 4 && $n <= 240 )
+    while( $za2 <= 4 && $iter < $maxiter )
     {
         $zr = $zr**2 - $zi**2 + $cr;
         $zi = 2 * $zr * $zi + $ci;
         $za2 = $zr**2 + $zi**2;
-        $n++;
+        $iter++;
     }
 
-    return $n;
+    return $iter;
 }
 
 # return rgb color values as a function of the iterations
 sub color
 {
-    my $n = shift;
-    my @rgb = GD::Simple->HSVtoRGB($n,255,255);
+    my $iter = shift;
+    my $threshold = shift;
+
+    my @rgb=(255,255,255);
+    @rgb = (0,0,0) if ($iter > $threshold); 
+    #my @rgb = GD::Simple->HSVtoRGB($iter,255,255);
     return \@rgb;
 }
