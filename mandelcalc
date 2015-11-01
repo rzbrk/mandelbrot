@@ -3,8 +3,8 @@
 use strict;
 use warnings;
 
-use GD::Simple;
-use Time::HiRes qw( usleep sleep );
+#use GD::Simple;
+#use Time::HiRes qw( usleep sleep );
 use Math::Complex;
 
 # define parameters
@@ -13,9 +13,9 @@ my $il = -1.5;              # lower bound imag
 my $ru = +1;                # upper bound real
 my $iu = +1.5;              # upper bound imag
 my $pixelsize = 0.002;      # pixel size
-my $maxiter = 21;           # maximum iterations
-my $threshold = 20;         # threshold for belonging to mandelbrot set
-my $file = "mandel.png";    # output file name
+my $maxiter = 255;           # maximum iterations
+#my $threshold = 20;         # threshold for belonging to mandelbrot set
+my $file = "mandel.bin";    # output file name
 
 # calculate parameters
 my $ncols = int(( $ru - $rl ) / $pixelsize);
@@ -24,8 +24,19 @@ my $nrows = int(( $iu - $il ) / $pixelsize);
 print "# Cols: $ncols\n# Rows: $nrows\n\n";
 
 # create a new image
-my $img = GD::Simple->new($ncols,$nrows);
-$img->penSize(1,1);
+#my $img = GD::Simple->new($ncols,$nrows);
+#$img->penSize(1,1);
+
+# open the output data file
+open DATA, ">$file" or die "Can't open output file: $!\n";
+binmode DATA;
+
+# Write the header of the output data file
+print DATA pack('h4', 'aaaa');      # delimiter
+print DATA pack('s', $ncols);
+print DATA pack('s', $nrows);
+print DATA pack('s', 2);
+print DATA pack('h4', 'aaaa');
 
 # initialize some values
 my $pixelcnt = 0;       # pixel counter
@@ -47,12 +58,15 @@ for (my $col = 0; $col < $ncols; $col++)
 
         # calculate mandelbrot sequence
         $iter = mb_sequence($cr, $ci, $maxiter);
-        $rgb = color($iter, $threshold);
+        #$rgb = color($iter, $threshold);
 
         # draw point
-        $img->moveTo($col,$row);
-        $img->fgcolor(@{$rgb});
-        $img->line(1);
+        #$img->moveTo($col,$row);
+        #$img->fgcolor(@{$rgb});
+        #$img->line(1);
+
+        # output data to file
+        print DATA pack('s', $iter);
 
         $pixelcnt++;
 
@@ -66,9 +80,12 @@ for (my $col = 0; $col < $ncols; $col++)
 print "\n";
 
 # output data to png file
-open PNG, ">$file";
-print PNG $img->png;
-close PNG;
+#open PNG, ">$file";
+#print PNG $img->png;
+#close PNG;
+
+# close the output data file
+close DATA;
 
 # calculate the mandelbot sequence
 sub mb_sequence
@@ -94,13 +111,13 @@ sub mb_sequence
 }
 
 # return rgb color values as a function of the iterations
-sub color
-{
-    my $iter = shift;
-    my $threshold = shift;
-
-    my @rgb=(255,255,255);
-    @rgb = (0,0,0) if ($iter > $threshold); 
-    #my @rgb = GD::Simple->HSVtoRGB($iter,255,255);
-    return \@rgb;
-}
+#sub color
+#{
+#    my $iter = shift;
+#    my $threshold = shift;
+#
+#    my @rgb=(255,255,255);
+#    @rgb = (0,0,0) if ($iter > $threshold); 
+#    #my @rgb = GD::Simple->HSVtoRGB($iter,255,255);
+#    return \@rgb;
+#}
