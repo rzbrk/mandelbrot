@@ -8,14 +8,14 @@ use Time::HiRes qw( usleep sleep );
 use Math::Complex;
 
 # define parameters
-my $rl = -2;            # lower bound real
-my $il = -2;            # lower bound imag
-my $ru = +2;            # upper bound real
-my $iu = +2;            # upper bound imag
-my $pixelsize = 0.004;  # pixel size
-my $maxiter = 25;      # maximum iterations
-my $threshold = 20;    # threshold for belonging to mandelbrot set
-my $file = "mandel.png";
+my $rl = -2;                # lower bound real
+my $il = -1.5;              # lower bound imag
+my $ru = +1;                # upper bound real
+my $iu = +1.5;              # upper bound imag
+my $pixelsize = 0.002;      # pixel size
+my $maxiter = 21;           # maximum iterations
+my $threshold = 20;         # threshold for belonging to mandelbrot set
+my $file = "mandel.png";    # output file name
 
 # calculate parameters
 my $ncols = int(( $ru - $rl ) / $pixelsize);
