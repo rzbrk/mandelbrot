@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use GD::Simple;
+
+# define parameters
+my $datafile = "mandel.bin";
+my $pngfile = "mandel.png";
+
+# size of data file in bytes
+my $filesize = -s $datafile;
+
+# initialize variables for data input
+my $delim1;
+my $delim2;
+my $temp;
+
+# open data file
+open DATA, "$datafile" or die "Can't open file: $!\n";
+binmode DATA;
+
+# read delimiters at byte positions 0x00 and 0x10. shall be both "0xaa 0xaa".
+# if not, die.
+read DATA, $delim1, 2;
+seek DATA, 8, 0;
+read DATA, $delim2, 2;
+$delim1 = unpack('h4', $delim1);
+$delim2 = unpack('h4', $delim2);
+die "File $datafile has invalid data format.\n"
+    if ( $delim1 ne "aaaa" || $delim2 ne "aaaa" );
+
+# read number of columns and rows and compare it with file size. die if this
+# doesn't match. neglect data size for now, as it is currently fixed to two
+# bytes.
+seek DATA, 2, 0;
+read DATA, $temp, 2;
+my $ncols = unpack('s', $temp);
+read DATA, $temp, 2;
+my $nrows = unpack('s', $temp);
+print "\nCols: $ncols\nRows: $nrows\n";
+die "File $datafile is currupt.\n"
+    if ( 10 + 2 * $nrows * $ncols != $filesize );
+
+
+
+
+close DATA
